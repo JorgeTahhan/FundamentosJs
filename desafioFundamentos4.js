@@ -10,15 +10,13 @@ var sacha = {
     edad: 14
 }
 
-function imprimirSiEsMayorDeEdad(persona) {
+const imprimirSiEsMayorDeEdad = (persona) => {
     var { nombre } = persona
     var { apellido } = persona
     var edad = persona.edad
 
-    if (edad >= 18) {
-        console.log(`Hola, me llamo ${nombre} ${apellido} y soy mayor de edad`);
-    } else {
-        console.log(`Hola, me llamo ${nombre} ${apellido} y soy menor de edad`);
+    if (edad < 18) {
+        return false;
     }
 
 }
