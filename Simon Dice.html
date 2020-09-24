@@ -4,7 +4,6 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
     <title>Simon Dice</title>
     <style>
         body {
@@ -82,6 +81,10 @@
             left: calc(50% - 200px);
         }
         
+        * {
+            font-family: Arial;
+        }
+        
         .hide {
             display: none;
         }
@@ -96,23 +99,27 @@
         <div id="verde" class="color verde right" data-color="verde"></div>
         <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
     </div>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         const celeste = document.getElementById('celeste')
         const violeta = document.getElementById('violeta')
         const naranja = document.getElementById('naranja')
         const verde = document.getElementById('verde')
         const btnEmpezar = document.getElementById('btnEmpezar')
+        const ULTIMO_NIVEL = 10
 
         class Juego {
             constructor() {
+                this.inicializar = this.inicializar.bind(this)
                 this.inicializar()
                 this.generarSecuencia()
-                this.siguienteNivel()
+                setTimeout(this.siguienteNivel, 500)
             }
 
             inicializar() {
+                this.siguienteNivel = this.siguienteNivel.bind(this)
                 this.elegirColor = this.elegirColor.bind(this)
-                btnEmpezar.classList.add('hide')
+                this.toggleBtnEmpezar()
                 this.nivel = 1
                 this.colores = {
                     celeste,
@@ -121,18 +128,28 @@
                     verde
                 }
             }
+
+            toggleBtnEmpezar() {
+                if (btnEmpezar.classList.contains('hide')) {
+                    btnEmpezar.classList.remove('hide')
+                } else {
+                    btnEmpezar.classList.add('hide')
+                }
+            }
+
             generarSecuencia() {
                 //fill para inicializar los arays para que el metodo map funcione luego el random da un valor entre 0 y 1 por eso *4
                 //math.floor redondea hacia abajo
-                this.secuencia = new Array(10).fill(0).map(n => Math.floor(Math.random() * 4))
+                this.secuencia = new Array(ULTIMO_NIVEL).fill(0).map(n => Math.floor(Math.random() * 4))
             }
 
             siguienteNivel() {
+                this.subnivel = 0
                 this.iluminarSecuencia()
                 this.agregarEventoClick()
             }
 
-            transformarNumerosAColor(numero) {
+            transformarNumeroAColor(numero) {
 
                 switch (numero) {
                     case 0:
@@ -147,6 +164,21 @@
 
             }
 
+            transformarColorANumero(color) {
+
+                switch (color) {
+                    case 'celeste':
+                        return 0
+                    case 'violeta':
+                        return 1
+                    case 'naranja':
+                        return 2
+                    case 'verde':
+                        return 3
+                }
+
+            }
+
             iluminarSecuencia() {
                 for (let i = 0; i < this.nivel; i++) {
 
@@ -154,7 +186,7 @@
                     se vera iluminado el ismo debemos usar "let" para que agarre cada 
                     valor por separado debemos tratar de usar const antes que let
                     y let antes que var*/
-                    let color = this.transformarNumerosAColor(this.secuencia[i])
+                    let color = this.transformarNumeroAColor(this.secuencia[i])
                     setTimeout(() => {
                         this.iluminarColor(color)
                     }, 1000 * i)
@@ -175,12 +207,48 @@
                 this.colores.violeta.addEventListener('click', this.elegirColor)
                 this.colores.naranja.addEventListener('click', this.elegirColor)
             }
-            elegirColor(ev) {
-                console.log(this)
+
+            eliminarEventosClick() {
+                this.colores.celeste.removeEventListener('click', this.elegirColor)
+                this.colores.verde.removeEventListener('click', this.elegirColor)
+                this.colores.violeta.removeEventListener('click', this.elegirColor)
+                this.colores.naranja.removeEventListener('click', this.elegirColor)
             }
+
+            elegirColor(ev) {
+                const nombreColor = ev.target.dataset.color
+                const numeroColor = this.transformarColorANumero(nombreColor)
+                this.iluminarColor(nombreColor)
+                if (numeroColor === this.secuencia[this.subnivel]) {
+                    this.subnivel++
+                        if (this.subnivel === this.nivel) {
+                            this.nivel++
+                                this.eliminarEventosClick()
+                            if (this.nivel === (ULTIMO_NIVEL + 1)) {
+                                this.ganoElJuego()
+                            } else {
+                                setTimeout(this.siguienteNivel, 1500)
+                            }
+                        }
+                } else {
+                    this.perdioElJuego()
+                }
+            }
+
+            ganoElJuego() {
+                swal('platzi', "Felicitaciones Ganaste el juego", "success")
+                    .then(this.inicializar)
+            }
+
+            perdioElJuego() {
+                swal('platzi', "Perdiste el juego", "warning")
+                    .then(() => {
+                        this.eliminarEventosClick()
+                        this.inicializar()
+                    })
+            }
+
         }
-
-
 
         function empezarJuego() {
             /*
